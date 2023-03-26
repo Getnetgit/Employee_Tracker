@@ -31,7 +31,7 @@ VALUES ('Staff',83000,9),
 
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ('Bezalel','Simmel',4,1),
+VALUES ('Bezalel','Simmel',4,NULL),
 ('Parto','Bamford',13,1),
 ('Chirstian','Koblick',6,1),
 ('Kyoichi','Maliniak',1,1),
