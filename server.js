@@ -17,8 +17,8 @@ const db = mysql.createConnection(
     host: 'localhost',
     // MySQL username,
     user: 'root',
-    // TODO: Add MySQL password here
-    password: 'My#005sql',
+    // : Add MySQL password here/ password left empty when pushed to gitHub
+    password: '',
     database: 'employee_db'
   },
   console.log(`Connected to the employe_db database.`)
@@ -35,11 +35,7 @@ app.get('/api/departments', (req, res) => {
         res.status(500).json({ error: err.message });
         return;
       }
-      res.json({
-        message: 'success',
-        data: rows
-      });
-      console.table(rows)
+      res.json(rows);
     });
   });
 
@@ -54,11 +50,7 @@ app.get('/api/departments', (req, res) => {
         res.status(500).json({ error: err.message });
         return;
       }
-      res.json({
-        message: 'success',
-        data: rows
-      });
-      console.table(rows)
+      res.json(rows)
     });
   });
 
@@ -73,11 +65,23 @@ app.get('/api/employees', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json({
-      message: 'success',
-      data: rows
-    });
-    console.table(rows)
+  
+    res.json(rows)
+  });
+});
+
+// Read list of all employees to be used for inquirer locaup table
+app.get('/api/employee/list', (req, res) => {
+  
+  const sql=`SELECT employee.id AS id, CONCAT(employee.first_name,' ', employee.last_name) AS employee_name FROM employee ORDER BY employee.last_name`;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+  
+    res.json(rows)
   });
 });
 
@@ -91,16 +95,13 @@ app.get('/api/managers', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json({
-      message: 'success',
-      data: rows
-    });
-    console.table(rows)
+   
+  res.json(rows)
     //console.log(rows)
   });
 });
 
-//Add departments
+//Add department
 app.post('/api/departments', ({ body }, res) => {
     const sql = `INSERT INTO department (name)
       VALUES (?)`;
@@ -118,14 +119,13 @@ app.post('/api/departments', ({ body }, res) => {
     });
   });
 
- //Add roles
+ //Add role
 app.post('/api/roles', ({ body }, res) => {
    
         const sql1 = `INSERT INTO role (title, salary, department_id)
         VALUES (?,?,?)`;
         //user will enter name and lockup id from database
         
-          
         const params = [body.title, body.salary, body.department_id]
         db.query(sql1, params, (err, result) => {
             if (err) {
@@ -139,13 +139,14 @@ app.post('/api/roles', ({ body }, res) => {
         });
 
   });
-  //Add employees
+
+  //Add employee
   app.post('/api/employees', ({ body }, res) => {
    
-        const sql = `INSERT INTO employee (first_name, last_name, role_id, salary, department_id, manager_id)
-        VALUES (?,?,?,?,?,?)`;//user will enter name and lockup id from database
+        const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+        VALUES (?,?,?,?)`;//user will enter name and lockup id from database
      
-        const params = [body.first_name, body.last_name, body.role_id, body.salary,body.department_id, body.manager_id]
+        const params = [body.first_name, body.last_name, body.role_id,  body.manager_id]
         db.query(sql, params, (err, result) => {
             if (err) {
             res.status(400).json({ error: err.message });
@@ -158,59 +159,28 @@ app.post('/api/roles', ({ body }, res) => {
         });
 
   });
+//update employeee role
+app.put('/api/employee/:id', (req, res) => {
+  const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+  const params = [req.body.role_id, req.params.id];
 
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Movie not found'
+      });
+    } else {
+      res.json({
+        message: 'success',
+        data: req.body,
+        changes: result.affectedRows
+      });
+    }
+  });
+});
 
-
-// Delete a movie
-// app.delete('/api/movie/:id', (req, res) => {
-//   const sql = `DELETE FROM movies WHERE id = ?`;
-//   const params = [req.params.id];
-  
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       res.statusMessage(400).json({ error: res.message });
-//     } else if (!result.affectedRows) {
-//       res.json({
-//       message: 'Movie not found'
-//       });
-//     } else {
-//       res.json({
-//         message: 'deleted',
-//         changes: result.affectedRows,
-//         id: req.params.id
-//       });
-//     }
-//   });
-// });
-
-
-
-
-
-  
-// BONUS: Update review name
-// app.put('/api/review/:id', (req, res) => {
-//   const sql = `UPDATE reviews SET review = ? WHERE id = ?`;
-//   const params = [req.body.review, req.params.id];
-
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       res.status(400).json({ error: err.message });
-//     } else if (!result.affectedRows) {
-//       res.json({
-//         message: 'Movie not found'
-//       });
-//     } else {
-//       res.json({
-//         message: 'success',
-//         data: req.body,
-//         changes: result.affectedRows
-//       });
-//     }
-//   });
-// });
-
-// Default response for any other request (Not Found)
 app.use((req, res) => {
   res.status(404).end();
 });
